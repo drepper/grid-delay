@@ -3,7 +3,10 @@
 
 from math import ceil, log10
 import numpy as np
-import svgwrite
+import pysvg.structure
+import pysvg.builders
+import pysvg.shape
+import pysvg.text
 from scipy.stats import skewnorm
 
 dist = skewnorm
@@ -33,18 +36,27 @@ cr = 4*scale
 
 def plot(t, total, g1, g2):
     tndigits = int(ceil(log10(total)))
-    svg = svgwrite.Drawing(filename="gen-t{:0{prec}d}.svg".format(t, prec=tndigits), size=("{}px".format(width), "{}px".format(height)))
+    svg = pysvg.structure.svg(width = width, height = height)
 
     mingen = min(np.min(g1), np.min(g2))
     maxgen = max(np.max(g1), np.max(g2))
 
-    title = svg.add(svg.g(font_size=24, font_family="sans", fill="#000000"))
-    title.add(svg.text("t = {}".format(t), (20, 30)))
+    textstyle = pysvg.builders.StyleBuilder()
+    textstyle.setFilling('#000000')
+    textstyle.setFontSize(24)
+    textstyle.setFontFamily('sans')
 
-    geninfo = svg.add(svg.g(font_size=24, font_family="sans", fill="#000000"))
+    text = pysvg.text.text("t = {}".format(t), 20, 30)
+    text.set_style(textstyle.getStyle())
+    svg.addElement(text)
+
+    rectstyle = pysvg.builders.StyleBuilder()
+    rectstyle.setFilling('rgb(102,178,255)')
 
     def pgrid(g, cx, cy):
-        svg.add(svg.rect((cx-2*cr,cy-2*cr), ((gridx+3)*cr,(gridy+3)*cr), fill="rgb(0,20,200)"))
+        rect = pysvg.shape.rect(x = cx-2*cr, y = cy-2*cr, width = (gridx+3)*cr, height = (gridy+3)*cr)
+        rect.set_style(rectstyle.getStyle())
+        svg.addElement(rect)
 
         for y in range(gridy):
             for x in range(gridx):
@@ -52,14 +64,20 @@ def plot(t, total, g1, g2):
                     grey = 100.0
                 else:
                     grey = 100.0 * (g[y][x] - mingen) / (maxgen - mingen)
-                svg.add(svg.circle(center=(cx+cr*x,cy+cr*y), r=cr/2, fill=svgwrite.rgb(grey, grey, grey, mode='%')))
+                circle = pysvg.shape.circle(cx = cx+cr*x, cy = cy+cr*y, r = cr/2)
+                circle_style = pysvg.builders.StyleBuilder()
+                circle_style.setFilling('rgb({}%,{}%,{}%)'.format(grey,grey,grey))
+                circle.set_style(circle_style.getStyle())
+                svg.addElement(circle)
                 
-        geninfo.add(svg.text("min gen = {}   max gen = {}".format(int(np.min(g)), int(np.max(g))), (cx-2*cr,height-30)))
+        text = pysvg.text.text("min gen = {}   max gen = {}".format(int(np.min(g)), int(np.max(g))), cx-2*cr, height-30)
+        text.set_style(textstyle.getStyle())
+        svg.addElement(text)
 
     pgrid(g1, int((width-2*cr*gridx)/3), int((height-cr*gridy)/2))
     pgrid(g2, int(width/2+(width-2*cr*gridx)/3), int((height-cr*gridy)/2))
 
-    svg.save()
+    svg.save(filename = "gen-t{:0{prec}d}.svg".format(t, prec=tndigits))
 
 def can_start(stalled, x, y):
     res = 0.0
