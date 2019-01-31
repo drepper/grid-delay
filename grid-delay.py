@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from math import ceil, log10
 import numpy as np
 import svgwrite
 from scipy.stats import skewnorm
@@ -30,16 +31,17 @@ width = 500*scale
 height = 250*scale
 cr = 4*scale
 
-def plot(t, g1, g2):
-    svg = svgwrite.Drawing(filename="gen-t{}.svg".format(t), size=("{}px".format(width), "{}px".format(height)))
+def plot(t, total, g1, g2):
+    tndigits = int(ceil(log10(total)))
+    svg = svgwrite.Drawing(filename="gen-t{:0{prec}d}.svg".format(t, prec=tndigits), size=("{}px".format(width), "{}px".format(height)))
 
     mingen = min(np.min(g1), np.min(g2))
     maxgen = max(np.max(g1), np.max(g2))
 
-    title = svg.add(svg.g(font_size=24, font_family="sans"))
+    title = svg.add(svg.g(font_size=24, font_family="sans", fill="#000000"))
     title.add(svg.text("t = {}".format(t), (20, 30)))
 
-    geninfo = svg.add(svg.g(font_size=24, font_family="sans"))
+    geninfo = svg.add(svg.g(font_size=24, font_family="sans", fill="#000000"))
 
     def pgrid(g, cx, cy):
         svg.add(svg.rect((cx-2*cr,cy-2*cr), ((gridx+3)*cr,(gridy+3)*cr), fill="rgb(0,20,200)"))
@@ -115,7 +117,7 @@ while t < total:
     print(mint)
     if mint - lastt >= dt:
         lastt += dt
-        plot(lastt, gen1, gen2)
+        plot(lastt, total, gen1, gen2)
         continue
 
     # To accelerate we update all cells which are within half of the medium of the minimal value.
