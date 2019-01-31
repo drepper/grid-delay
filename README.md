@@ -17,3 +17,12 @@ approximation only the objects in the vacinity are taken into account.
 If each node performs the computation for some part of space (2D, 3D,
 or whatever) then only masses in the neighboring nodes need to be know.
 This can be mapped nicely to a grid as in this example.
+
+Animate
+-------
+
+The python program creates SVG files as output.  These can be looked at
+with `eog` or similar tools in sequence.  Or: one can create an animated
+GIF:
+
+    convert -delay 40 -loop 1 gen-t????.svg gird-movie.gif
